@@ -1,6 +1,5 @@
-# interfaz_grafica.py
 import tkinter as tk
-from tkinter import ttk
+from tkinter import ttk, messagebox
 from main import ejecutar_algoritmo_genetico
 
 class InterfazGenetico:
@@ -19,6 +18,9 @@ class InterfazGenetico:
         self.prob_mutacion_individuo_var = tk.DoubleVar()
         self.prob_mutacion_gen_var = tk.DoubleVar()
         self.num_generaciones_var = tk.IntVar()
+        self.mejor_individuo_global = None
+
+
 
 
         # Llamar a la función de configuración de la interfaz
@@ -59,10 +61,11 @@ class InterfazGenetico:
         ttk.Label(self.root, text="Número de Generaciones:").grid(row=9, column=0, padx=10, pady=5, sticky="e")
         ttk.Entry(self.root, textvariable=self.num_generaciones_var).grid(row=9, column=1, padx=10, pady=5)
 
-        # Crear botón para ejecutar el algoritmo genético
+        # Crear botón para ejecutar 
         ttk.Button(self.root, text="Ejecutar Algoritmo Genético", command=self.ejecutar_genetico).grid(row=10, column=0, columnspan=2, pady=10)
 
     def ejecutar_genetico(self):
+
         # Obtener los valores ingresados por el usuario
         delta_X = self.deltaX_var.get()
         a = self.a_var.get()
@@ -74,9 +77,18 @@ class InterfazGenetico:
         prob_mutacion_individuo = self.prob_mutacion_individuo_var.get()
         prob_mutacion_gen = self.prob_mutacion_gen_var.get()
         num_generaciones = self.num_generaciones_var.get()
+        ejecutar_algoritmo_genetico(delta_X, a, b, poblacion_inicial, poblacion_maxima, tipo_optimizacion, ecuacion,
+                                    prob_mutacion_individuo, prob_mutacion_gen, num_generaciones)
+        resultado_genetico = ejecutar_algoritmo_genetico(delta_X, a, b, poblacion_inicial, poblacion_maxima,
+                                                        tipo_optimizacion, ecuacion, prob_mutacion_individuo,
+                                                        prob_mutacion_gen, num_generaciones)
 
-        # Llamar a la función del algoritmo genético con los valores ingresados
-        ejecutar_algoritmo_genetico(delta_X, a, b, poblacion_inicial, poblacion_maxima, tipo_optimizacion, ecuacion, prob_mutacion_individuo, prob_mutacion_gen, num_generaciones)
+        self.mejor_individuo_global = resultado_genetico[0]
+
+        messagebox.showinfo("Mejor Individuo Global", f"Mejor Individuo Global:\n{self.mejor_individuo_global}")
+
+
+
 
 if __name__ == "__main__":
     root = tk.Tk()
