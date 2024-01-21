@@ -330,6 +330,11 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         elif tipo_optimizacion == 'min':
             destacado = min(poblacion_resultados, key=lambda ind: ind[3])
 
+        if tipo_optimizacion == 'max':
+            peor = min(poblacion_resultados, key=lambda ind: ind[3])
+        elif tipo_optimizacion == 'min':
+            peor = min(poblacion_resultados, key=lambda ind: ind[3])
+
         valores_x = [individuo[2] for individuo in poblacion_resultados]  # Valores de x
         valores_fx = [individuo[3] for individuo in poblacion_resultados]  # Valores de f(x)
         # Calcular el peor de la generación actual
@@ -383,8 +388,8 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     plt.scatter(valores_x, valores_fx, alpha=0.6, label='Individuos')
 
     # Destacar el mejor individuo (o peor, dependiendo de la optimización)
-    plt.scatter(destacado[2], destacado[3], color='red', s=100, label='Mejor')
-
+    plt.scatter(destacado[2], destacado[3], color='green', s=100, label='Mejor')
+    plt.scatter(peor[2], peor[3], color='red', s=100, label='peor')
     plt.title(f'Dispersión de f(x) de las {num_generaciones} generaciones')
     plt.xlabel('x')
     plt.ylabel('f(x)')
