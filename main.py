@@ -347,6 +347,9 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         peores_fitness.append(peor_individuo_generacion[3])
         promedio_fitness.append(calcular_promedio(poblacion_resultados))
 
+    mejor_individuo_ultima_generacion = encontrar_mejor_individuo(poblacion_resultados)
+
+
     print("\nPoblación Final:")
     print("Individuo, Valor Entero, x, f(x)")
     for individuo in poblacion_resultados:
@@ -395,6 +398,10 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     plt.ylabel('f(x)')
     plt.legend()
     plt.show()
+
+    return mejor_individuo_global, valores_x, valores_fx, peor, destacado, mejores_fitness, peores_fitness, poblacion_resultados, peor_individuo_generacion, mejor_individuo_ultima_generacion
+
+
 
     # Imprimir todos los individuos de cada generación al final
     print("Todos los individuos de cada generación:")
