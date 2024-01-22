@@ -77,8 +77,6 @@ class InterfazGenetico:
         prob_mutacion_individuo = self.prob_mutacion_individuo_var.get()
         prob_mutacion_gen = self.prob_mutacion_gen_var.get()
         num_generaciones = self.num_generaciones_var.get()
-        ejecutar_algoritmo_genetico(delta_X, a, b, poblacion_inicial, poblacion_maxima, tipo_optimizacion, ecuacion,
-                                    prob_mutacion_individuo, prob_mutacion_gen, num_generaciones)
         resultado_genetico = ejecutar_algoritmo_genetico(delta_X, a, b, poblacion_inicial, poblacion_maxima,
                                                         tipo_optimizacion, ecuacion, prob_mutacion_individuo,
                                                         prob_mutacion_gen, num_generaciones)
