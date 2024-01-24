@@ -2,12 +2,15 @@ import random
 from math import log2
 import matplotlib.pyplot as plt
 import numpy as np
-from sympy import symbols, cos, lambdify, tan
-import cv2
+from matplotlib.animation import FuncAnimation
+from sympy import symbols, cos, lambdify, tan,ln,Abs,sin
+import cv2 as cv
+import matplotlib
 import os
 def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicial_value, poblacion_maxima_deseada_value, tipo_optimizacion_value, valor_ecuacion, valor_prob_mutacion_individuo,
                                 valor_prob_mutacion_gen , num_generaciones):
 
+    print(matplotlib.animation.writers['ffmpeg'].bin_path())
 
     # Declarar variables globales
     a = 0
@@ -26,7 +29,6 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     def operaciones_basicas(deltaX_value, a_value, b_value, poblacion_inicial_value, poblacion_maxima_deseada_value):
         nonlocal a, b, deltaX, poblacion_inicial, deltaX_optima, poblacion_maxima_deseada, tipo_optimizacion  # Declarar como globales
 
-        # Eliminar la línea de entrada mediante input y utilizar el valor recibido desde la interfaz gráfica
         deltaX = deltaX_value
         a = a_value
         b = b_value
@@ -60,7 +62,6 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     def generar_poblacion(n, deltaX_optima, funcion):
         poblacion = []
 
-        # Utilizar el mejor individuo global como parte de la población inicial si está disponible
         if mejor_individuo_global is not None:
             poblacion.append(mejor_individuo_global)
 
@@ -107,11 +108,10 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         if len(poblacion) <= 2:
             return list(zip(poblacion, poblacion[::-1]))  # Cruza el único par posible
 
-        # Seleccionar el porcentaje de mejores individuos
         cantidad_mejores = max(int(len(poblacion) * porcentaje), 2)
 
         if cantidad_mejores % 2 != 0:
-            cantidad_mejores += 1  # Asegurar un número par de mejores individuos
+            cantidad_mejores += 1
 
         mejores = poblacion_ordenada[:cantidad_mejores]
         demas = poblacion_ordenada[cantidad_mejores:]
@@ -172,7 +172,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
                                                                      poblacion_inicial_value,
                                                                      poblacion_maxima_deseada_value)
 
-    funcion = ingresar_ecuacion()  # Declarar la función aquí
+    funcion = ingresar_ecuacion()
 
     # Número total de generaciones
     num_generaciones = num_generaciones
@@ -187,7 +187,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
 
     def mutar_individuo(individuo, prob_mutacion_gen, deltaX_optima, funcion, a):
         bits_mutados = ""
-        for bit in individuo[0]:  # Seleccionar solo la cadena de bits
+        for bit in individuo[0]:
             # Aplicar mutación al bit con probabilidad prob_mutacion_gen
             if random.random() < prob_mutacion_gen:
                 # Negar el bit y agregarlo a la cadena mutado
@@ -253,6 +253,10 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     hijos_mutados = []
     mejores_individuos = []
     peores_individuos = []
+    todos_valores_x = []
+    todos_valores_fx = []
+    listaAnimaciones = []  # Lista de animaciones generadas
+    listaVideos = []
 
     poblacion_resultados = generar_poblacion(n, deltaX_optima, funcion)
 
@@ -288,18 +292,20 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
 
         poblacion_resultados.extend(hijos_mutados)
 
-        valores_x = [individuo[2] for individuo in poblacion_resultados]  # Valores de x
-        valores_fx = [individuo[3] for individuo in poblacion_resultados]  # Valores de f(x)
-        historial_generaciones.append((valores_x, valores_fx))
 
 
         # Actualizar el mejor individuo global si es necesario
         if mejor_individuo_global is None or mejor_individuo_generacion[3] < mejor_individuo_global[3]:
             mejor_individuo_global = mejor_individuo_generacion
 
-        if len(poblacion_resultados) > poblacion_maxima_deseada:
-            poblacion_resultados = eliminar_excedentes_aleatoriamente(poblacion_resultados, poblacion_maxima_deseada,
-                                                                      tipo_optimizacion)
+
+        valores_x = [individuo[2] for individuo in poblacion_resultados]  # Valores de x
+        valores_fx = [individuo[3] for individuo in poblacion_resultados]  # Valores de f(x)
+        todos_valores_x.extend(valores_x)
+        todos_valores_fx.extend(valores_fx)
+        historial_generaciones.append((valores_x, valores_fx))
+
+
 
         # Almacenar todos los individuos de la generación actual
         todos_los_individuos.extend(poblacion_resultados)
@@ -346,10 +352,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         if tipo_optimizacion == 'max':
             peor = min(poblacion_resultados, key=lambda ind: ind[3])
         elif tipo_optimizacion == 'min':
-            peor = min(poblacion_resultados, key=lambda ind: ind[3])
-
-        valores_x = [individuo[2] for individuo in poblacion_resultados]  # Valores de x
-        valores_fx = [individuo[3] for individuo in poblacion_resultados]  # Valores de f(x)
+            peor = max(poblacion_resultados, key=lambda ind: ind[3])
         # Calcular el peor de la generación actual
         peor_individuo_generacion = peor_individuo_generacion
         # Almacenar todos los individuos de la generación actual
@@ -360,58 +363,69 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         peores_fitness.append(peor_individuo_generacion[3])
         promedio_fitness.append(calcular_promedio(poblacion_resultados))
 
+        if len(poblacion_resultados) > poblacion_maxima_deseada:
+            poblacion_resultados = eliminar_excedentes_aleatoriamente(poblacion_resultados, poblacion_maxima_deseada,
+                                                                      tipo_optimizacion)
+
 
     mejor_individuo_ultima_generacion = encontrar_mejor_individuo(poblacion_resultados)
 
-    # Función para generar las gráficas
-    def generar_graficas(historial_generaciones, mejores_individuos, peores_individuos):
-        for i, ((valores_x, valores_fx), mejor_individuo, peor_individuo) in enumerate(
-                zip(historial_generaciones, mejores_individuos, peores_individuos)):
-            plt.figure(figsize=(10, 6))
-            plt.scatter(valores_x, valores_fx, alpha=0.6, label=f'Generación {i}')
+    def animarPlot(x, y):
+        fig, ax = plt.subplots()
+        def actualizarPlot(i):
+            ax.clear()
+            ax.scatter(x[:i], y[:i])
+            ax.set_xlim([1.1 * np.min(x), 1.1 * np.max(x)])
+            ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])
+            ax.set_title("213342")
+        animar = FuncAnimation(fig, actualizarPlot, range(len(x)), interval=0, cache_frame_data=False, repeat=False)
+        return fig, animar
+    def grabarVideo(animacion, nombre_video):
+        fig, animar = animacion
+        animar.save(nombre_video, writer='ffmpeg', codec='h264', fps=60, dpi=100)
+        plt.close(fig)
+        
+    animacion = animarPlot(todos_valores_x, todos_valores_fx)
+    nombre_video = "grafica_animada.mp4"
+    grabarVideo(animacion, nombre_video)
+    
+    def unirVariosVideos(listaAnimaciones, listaVideos):
+        videos = []
+        for animacion, video_name in zip(listaAnimaciones, listaVideos):
+            grabarVideo(animacion, video_name)  
+            video = cv.VideoCapture(video_name)
+            if not video.isOpened():  # Verifica que el video se haya abierto correctamente
+                print(f"No se pudo abrir el video: {video_name}")
+                continue
+            videos.append(video)
+            os.remove(video_name)  # Comentar esta línea si quieres conservar los videos individuales
 
-            # Destacar el mejor individuo
-            plt.scatter(mejor_individuo[2], mejor_individuo[3], color='green', s=100, label='Mejor')
+        ancho = int(videos[0].get(cv.CAP_PROP_FRAME_WIDTH))
+        alto = int(videos[0].get(cv.CAP_PROP_FRAME_HEIGHT))
+        fps = int(videos[0].get(cv.CAP_PROP_FPS))
+        fourcc = cv.VideoWriter_fourcc(*'mp4v')
+        video_combinado = cv.VideoWriter('video_final.mp4', fourcc, fps, (ancho, alto))
+        
+        for video in videos:
+            while True:
+                ret, frame = video.read()
+                if not ret:
+                    break
+                video_combinado.write(frame)
+            video.release()
+        
+        video_combinado.release()
 
-            # Destacar el peor individuo
-            plt.scatter(peor_individuo[2], peor_individuo[3], color='red', s=100, label='Peor')
-
-            plt.title(f'Dispersión de f(x) en la Generación {i}')
-            plt.xlabel('x')
-            plt.ylabel('f(x)')
-            plt.legend()
-            plt.savefig(f'generation_{i}.png')
-            plt.close()
-
-    generar_graficas(historial_generaciones, mejores_individuos, peores_individuos)
-
-
-    image_folder = '.'
-    video_name = 'genetic_algorithm_evolution.avi'
-
-    images = [img for img in os.listdir(image_folder) if img.endswith(".png")]
-    # Asegúrate de que las imágenes estén en orden correcto
-    images.sort(key=lambda x: int(x.split('_')[1].split('.')[0]))
-
-    # Obtener las dimensiones de la primera imagen
-    frame = cv2.imread(os.path.join(image_folder, images[0]))
-    height, width, layers = frame.shape
-
-    # Definir el codec y crear un objeto VideoWriter
-    video = cv2.VideoWriter(video_name, cv2.VideoWriter_fourcc(*'DIVX'), 1, (width, height))
-
-    for image in images:
-        video.write(cv2.imread(os.path.join(image_folder, image)))
-
-    cv2.destroyAllWindows()
-    video.release()
+        
+    unirVariosVideos(listaAnimaciones, listaVideos)
+    
 
 
     print("\nPoblación Final:")
     print("Individuo, Valor Entero, x, f(x)")
     for individuo in poblacion_resultados:
         print(f"{individuo[0]}, {individuo[1]}, {individuo[2]}, {individuo[3]}")
-    print(len(poblacion_resultados))
+    print(f"este fue el valor final: {len(poblacion_resultados)}")
 
     # Graficar resultados
     generaciones = list(range(1, num_generaciones + 1))
@@ -439,7 +453,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     x_vals = np.linspace(a, b, 400)
     fx_vals = funcion(x_vals)
 
-    # Segunda gráfica: Dispersión de f(x) para la última generación y la funció1n objetivo
+    # Segunda gráfica
     plt.figure(figsize=(10, 6))
     # Traza la función objetivo
     plt.plot(x_vals, fx_vals, label='f(x) original', color='black')
@@ -450,7 +464,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     # Destacar el mejor individuo (o peor, dependiendo de la optimización)
     plt.scatter(destacado[2], destacado[3], color='green', s=100, label='Mejor')
     plt.scatter(peor[2], peor[3], color='red', s=100, label='peor')
-    plt.title(f'Dispersión de f(x) de las {num_generaciones} generaciones')
+    plt.title(f'Dispersión de f(x) de la ultima generacion')
     plt.xlabel('x')
     plt.ylabel('f(x)')
     plt.legend()
