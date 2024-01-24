@@ -83,16 +83,22 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         return lambdify(x, ecuacion, 'numpy')
 
     def encontrar_mejor_individuo(poblacion):
-        # Encontrar el mejor individuo según la función de aptitud (fx)
+        if not poblacion:  # Comprueba si la población está vacía
+            print("Error: La población está vacía. No se puede encontrar el mejor individuo.")
+            # Decide qué hacer en este caso. Por ejemplo, puedes retornar None o detener la ejecución.
+            return None
+
+        # Si la población no está vacía, procede a encontrar el mejor individuo
         if tipo_optimizacion == 'max':
             mejor_individuo = max(poblacion, key=lambda ind: ind[3])
         elif tipo_optimizacion == 'min':
             mejor_individuo = min(poblacion, key=lambda ind: ind[3])
         else:
             print("Error: Tipo de optimización no válido.")
-            exit()
+            return None
 
         return mejor_individuo
+
 
     def seleccionar_mejores(poblacion, porcentaje):
         # Ordenar la población según la aptitud (f(x))
@@ -371,13 +377,17 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     mejor_individuo_ultima_generacion = encontrar_mejor_individuo(poblacion_resultados)
 
     def animarPlot(x, y):
+        
         fig, ax = plt.subplots()
+        
         def actualizarPlot(i):
             ax.clear()
             ax.scatter(x[:i], y[:i])
             ax.set_xlim([1.1 * np.min(x), 1.1 * np.max(x)])
             ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])
-            ax.set_title("213342")
+            fig.suptitle(f"Hecho por: Angel Gabriel Alvarez Albores")
+            ax.set_title(f"Ecuacion: {valor_ecuacion}")
+            
         animar = FuncAnimation(fig, actualizarPlot, range(len(x)), interval=0, cache_frame_data=False, repeat=False)
         return fig, animar
     def grabarVideo(animacion, nombre_video):
@@ -390,6 +400,10 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
     grabarVideo(animacion, nombre_video)
     
     def unirVariosVideos(listaAnimaciones, listaVideos):
+        if not listaVideos:
+            print("No hay videos para unir.")
+            return
+
         videos = []
         for animacion, video_name in zip(listaAnimaciones, listaVideos):
             grabarVideo(animacion, video_name)  
@@ -398,14 +412,20 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
                 print(f"No se pudo abrir el video: {video_name}")
                 continue
             videos.append(video)
-            os.remove(video_name)  # Comentar esta línea si quieres conservar los videos individuales
+            # Comentar la siguiente línea si quieres conservar los videos individuales
+            os.remove(video_name)
+
+        # Verifica que se haya agregado al menos un video a la lista
+        if not videos:
+            print("No se pudieron abrir los videos para unir.")
+            return
 
         ancho = int(videos[0].get(cv.CAP_PROP_FRAME_WIDTH))
         alto = int(videos[0].get(cv.CAP_PROP_FRAME_HEIGHT))
         fps = int(videos[0].get(cv.CAP_PROP_FPS))
         fourcc = cv.VideoWriter_fourcc(*'mp4v')
         video_combinado = cv.VideoWriter('video_final.mp4', fourcc, fps, (ancho, alto))
-        
+
         for video in videos:
             while True:
                 ret, frame = video.read()
@@ -413,7 +433,7 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
                     break
                 video_combinado.write(frame)
             video.release()
-        
+
         video_combinado.release()
 
         
