@@ -376,26 +376,36 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
 
     mejor_individuo_ultima_generacion = encontrar_mejor_individuo(poblacion_resultados)
 
-    def animarPlot(x, y):
-        
+    def animarPlot(x, funcion, historial_generaciones):
+        y = funcion(x)  # Se calcula los valores y segun la funcion
         fig, ax = plt.subplots()
         
         def actualizarPlot(i):
             ax.clear()
-            ax.scatter(x[:i], y[:i])
-            ax.set_xlim([1.1 * np.min(x), 1.1 * np.max(x)])
-            ax.set_ylim([1.1 * np.min(y), 1.1 * np.max(y)])
-            fig.suptitle(f"Hecho por: Angel Gabriel Alvarez Albores")
-            ax.set_title(f"Ecuacion: {valor_ecuacion}")
             
-        animar = FuncAnimation(fig, actualizarPlot, range(len(x)), interval=0, cache_frame_data=False, repeat=False)
+            # Graficar la función
+            ax.plot(x, y, color='blue', label='Función') 
+            
+            # Graficar los puntos individuales de la generación actual
+            puntos_x, puntos_fx = historial_generaciones[i]
+            ax.scatter(puntos_x, puntos_fx, color='red', label='Puntos Generación ' + str(i+1)) 
+            
+            ax.set_xlim([1.1 * np.min(x), 1.1 * np.max(x)])
+            ax.set_ylim(min(1.1 * np.min(y), 1.1 * np.min(puntos_fx)), max(1.1 * np.max(y), 1.1 * np.max(puntos_fx)))
+            fig.suptitle(f"Hecho por: Angel Gabriel Alvarez Albores")
+            ax.set_title(f"Ecuacion {valor_ecuacion}")
+            ax.legend()
+            
+        animar = FuncAnimation(fig, actualizarPlot, frames=len(historial_generaciones), interval=2, cache_frame_data=False, repeat=False)
         return fig, animar
+    
     def grabarVideo(animacion, nombre_video):
         fig, animar = animacion
-        animar.save(nombre_video, writer='ffmpeg', codec='h264', fps=60, dpi=100)
+        animar.save(nombre_video, writer='ffmpeg', codec='h264', fps=30, dpi=100)
         plt.close(fig)
-        
-    animacion = animarPlot(todos_valores_x, todos_valores_fx)
+    
+    x_vals_animacion = np.linspace(a, b, 400)
+    animacion = animarPlot(x_vals_animacion, funcion, historial_generaciones)
     nombre_video = "grafica_animada.mp4"
     grabarVideo(animacion, nombre_video)
     
@@ -408,11 +418,10 @@ def ejecutar_algoritmo_genetico(deltaX_value, a_value, b_value, poblacion_inicia
         for animacion, video_name in zip(listaAnimaciones, listaVideos):
             grabarVideo(animacion, video_name)  
             video = cv.VideoCapture(video_name)
-            if not video.isOpened():  # Verifica que el video se haya abierto correctamente
+            if not video.isOpened():
                 print(f"No se pudo abrir el video: {video_name}")
                 continue
             videos.append(video)
-            # Comentar la siguiente línea si quieres conservar los videos individuales
             os.remove(video_name)
 
         # Verifica que se haya agregado al menos un video a la lista
